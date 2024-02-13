@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://c8vlyjyk1b72h"]
+
+[ext_resource type="Script" path="res://src/scene/Test.gd" id="1_ecucy"]
+[ext_resource type="Script" path="res://src/scene/Camera2D.gd" id="2_vwadl"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kqi7e"]
+
+[node name="Test" type="Node2D"]
+script = ExtResource("1_ecucy")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(70867.7, 49654.6)
+script = ExtResource("2_vwadl")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_kqi7e")
