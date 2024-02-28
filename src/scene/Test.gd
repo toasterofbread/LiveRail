@@ -1,13 +1,20 @@
 extends Node2D
 
-const FILE = "res://map.osm"
-var loader: OsmLoader
+const MAP_FILE = "res://map.osm"
+const TIMETABLE_FILES: Array[String] = ["res://data/19500.json", "res://data/19800.json", "res://data/20000.json"]
+
+var loader: OsmLoader = OsmLoader.new()
+var timetable: TT.Timetable = TT.Timetable.new()
 
 var rail_segment_lines: Array[RailSegmentLine] = []
 
 func _ready():
-	loader = OsmLoader.new()
-	loader.loadOsmFile(FILE)
+	for file in TIMETABLE_FILES:
+		TT.loadTimetableFile(
+			FileAccess.open(file, FileAccess.READ), 
+			timetable
+		)
+	loader.loadOsmFile(MAP_FILE)
 	
 	for rail_line in loader.rail_lines:
 		for rail_segment in rail_line.segments:
@@ -26,6 +33,21 @@ func _ready():
 			sprite.global_position = station.pos * 0.01
 			sprite.scale = Vector2.ONE * 0.05
 			add_child(sprite)
+			
+			var timetable_station: TT.Station = null
+			for name in [station.name] + station.names.values():
+				for st in timetable.stations:
+					if st in name or name in st:
+						timetable_station = timetable.stations[st]
+						break
+				if timetable_station != null:
+					break
+			
+			if timetable_station == null:
+				push_error("No timetable station found for ", station)
+				return
+			
+			print(station, ": ", timetable_station)
 	
 	add_child(CursorCollisionBody.new())
 	

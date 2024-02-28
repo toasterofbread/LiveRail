@@ -94,6 +94,8 @@ func parseRelation(parser: XMLParser):
 	rail_lines.append(rail_line)
 
 func loadOsmFile(file_path: String):
+	var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
+	
 	var parser = XMLParser.new()
 	parser.open(file_path)
 	
@@ -117,6 +119,7 @@ func loadOsmFile(file_path: String):
 		for segment in line.segment_refs:
 			if segment in rail_segments:
 				line.segments.append(rail_segments[segment])
+		
 		for station in line.station_refs:
 			if station in nodes:
 				line.stations.append(nodes[station])
