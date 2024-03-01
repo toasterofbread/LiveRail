@@ -22,12 +22,12 @@ func applyRailSegment(rail: RailSegment, line: RailLine):
 	var max: Vector2 = null
 	
 	for node in rail.nodes:
-		points.append(node.pos * 0.01)
+		points.append(node.pos * MapDisplay.SCALE)
 		
 		var marker = Sprite2D.new()
 		marker.texture = preload("res://icon.svg")
 		marker.scale = Vector2.ONE * 0.05
-		marker.position = node.pos * 0.01
+		marker.position = node.pos * MapDisplay.SCALE
 		marker.z_index = 1
 		
 		if min == null:

@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://1l5hc7pvsg1o"]
+
+[ext_resource type="Script" path="res://src/scene/map/MapDisplay.gd" id="1_54jc4"]
+[ext_resource type="Script" path="res://src/scene/Camera2D.gd" id="2_70vlx"]
+
+[node name="MapDisplay" type="Node2D"]
+script = ExtResource("1_54jc4")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(70867.7, 49654.6)
+script = ExtResource("2_70vlx")
+
+[node name="Map" type="Node2D" parent="."]

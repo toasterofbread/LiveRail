@@ -1,16 +1,28 @@
 [gd_scene load_steps=4 format=3 uid="uid://c8vlyjyk1b72h"]
 
 [ext_resource type="Script" path="res://src/scene/Test.gd" id="1_ecucy"]
-[ext_resource type="Script" path="res://src/scene/Camera2D.gd" id="2_vwadl"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_kqi7e"]
+[ext_resource type="PackedScene" uid="uid://1l5hc7pvsg1o" path="res://src/scene/map/MapDisplay.tscn" id="2_88pbq"]
+[ext_resource type="PackedScene" uid="uid://dmwpki7seb4s0" path="res://src/scene/interface/TimeDisplay/TimeDisplay.tscn" id="3_p45w8"]
 
 [node name="Test" type="Node2D"]
 script = ExtResource("1_ecucy")
 
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(70867.7, 49654.6)
-script = ExtResource("2_vwadl")
+[node name="MapDisplay" parent="." instance=ExtResource("2_88pbq")]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_kqi7e")
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TimeDisplay" parent="CanvasLayer/Control" instance=ExtResource("3_p45w8")]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_right = 0.0
+grow_horizontal = 1
+grow_vertical = 0

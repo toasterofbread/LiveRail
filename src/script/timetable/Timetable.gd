@@ -15,19 +15,23 @@ class Station:
 		return "Station(name=%s)" % name
 
 class Stop:
+	var station: Station
 	var arrival: float
 	var departure: float
 	
 	func _to_string():
-		return "Stop(arrival=%s, departure=%s)" % [TT.timeToString(arrival), TT.timeToString(departure)]
+		return "Stop(arrival=%s, departure=%s)" % [TT.secondsToText(arrival), TT.secondsToText(departure)]
 
 class TrainService:
 	var type: Type
 	var train_class: TrainClass
-	var stops: Dictionary # [Station, Stop]
+	var stops: Array[Stop]
 	
-	func getPosition(time: float) -> TrainPosition:
-		return null
+	func getPosition(time_s: float, shouldIgnoreStop: Callable = func(it): false) -> TrainPosition:
+		return TrainPosition.calculateTrainPosition(self, time_s, shouldIgnoreStop)
+	
+	func _to_string():
+		return "TrainService(len(stops)=%d)" % len(stops)
 	
 	enum Type { 
 		LOCAL,
@@ -39,11 +43,6 @@ class TrainService:
 		COMMUTER_LTD_EXPRESS,
 		DIRECT_EXPRESS
 	}
-
-class TrainPosition:
-	var previous: Station
-	var next: Station
-	var progress: float
 
 class TrainClass:
 	var name: String
@@ -88,21 +87,24 @@ static func loadTimetableFile(file: FileAccess, timetable: Timetable):
 			station.name = stop["station"]
 			timetable.stations[station.name] = station
 		
-		var stops: Dictionary
+		var stops: Array[Stop]
 		for stop_data in item["stops"]:
 			var stop: Stop = Stop.new()
-			stop.arrival = stringToTime(stop_data["arr"])
-			stop.departure = stringToTime(stop_data["dep"])
+			stop.arrival = textToSeconds(stop_data["arr"])
+			stop.departure = textToSeconds(stop_data["dep"])
+			stop.station = timetable.stations[stop_data["station"]]
 			
-			var station: Station = timetable.stations[stop_data["station"]]
-			stops[station] = stop
+			stops.append(stop)
 		train.stops = stops
 
-static func stringToTime(time: String) -> float:
-	if time == null:
+"""
+Takes a time string in the format "HH:mm" and returns the represented time in seconds
+"""
+static func textToSeconds(string: String) -> float:
+	if string == null:
 		return null
 	
-	var split: PackedStringArray = time.split(":")
+	var split: PackedStringArray = string.split(":")
 	assert(len(split) == 2, str(split))
 	
 	var hours: float = split[0].to_float()
@@ -110,7 +112,10 @@ static func stringToTime(time: String) -> float:
 	
 	return ((hours * 60) + minutes) * 60
 
-static func timeToString(time: float) -> String:
+"""
+Takes a time in seconds and returns a time string in the format "HH:mm"
+"""
+static func secondsToText(time: float) -> String:
 	if time == null:
 		return null
 	

@@ -1,13 +1,11 @@
 extends RefCounted
 class_name OsmLoader
 
-var nodes: Dictionary = {}
-var rail_segments: Dictionary = {}
-var rail_lines: Array[RailLine] = []
+var map: Map = Map.new()
 
 func parseNode(parser: XMLParser):
-	var node: MapNode = MapNode.parse(parser)
-	nodes[node.id] = node
+	var node: Map.MapNode = Map.MapNode.parse(parser)
+	map.nodes[node.id] = node
 
 func parseWay(parser: XMLParser):
 	var names: Dictionary = {}
@@ -44,7 +42,7 @@ func parseWay(parser: XMLParser):
 				railway = value
 	
 	if railway != null:
-		rail_segments[id] = RailSegment.new(id, names, rail_nodes)
+		map.rail_segments[id] = RailSegment.new(id, names, rail_nodes)
 
 func parseRelation(parser: XMLParser):
 	var rail_line: RailLine = RailLine.new()
@@ -91,7 +89,7 @@ func parseRelation(parser: XMLParser):
 	if not is_railway:
 		return
 	
-	rail_lines.append(rail_line)
+	map.rail_lines.append(rail_line)
 
 func loadOsmFile(file_path: String):
 	var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
@@ -111,15 +109,15 @@ func loadOsmFile(file_path: String):
 			"relation":
 				parseRelation(parser)
 	
-	for segment in rail_segments.values():
+	for segment in map.rail_segments.values():
 		for node in segment.node_refs:
-			segment.nodes.append(nodes[node])
+			segment.nodes.append(map.nodes[node])
 	
-	for line in rail_lines:
+	for line in map.rail_lines:
 		for segment in line.segment_refs:
-			if segment in rail_segments:
-				line.segments.append(rail_segments[segment])
+			if segment in map.rail_segments:
+				line.segments.append(map.rail_segments[segment])
 		
 		for station in line.station_refs:
-			if station in nodes:
-				line.stations.append(nodes[station])
+			if station in map.nodes:
+				line.stations.append(map.nodes[station])

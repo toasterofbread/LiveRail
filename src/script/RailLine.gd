@@ -10,4 +10,4 @@ var segment_refs: Array[int] = []
 var segments: Array[RailSegment] = []
 
 var station_refs: Array[int] = []
-var stations: Array[MapNode] = []
+var stations: Array[Map.MapNode] = []

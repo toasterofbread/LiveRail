@@ -3,7 +3,7 @@ class_name RailSegment
 
 var id: int
 var names: Dictionary
-var nodes: Array[MapNode]
+var nodes: Array[Map.MapNode]
 var node_refs: Array[int]
 
 func _init(id: int, names: Dictionary, node_refs: Array[int] = []):
