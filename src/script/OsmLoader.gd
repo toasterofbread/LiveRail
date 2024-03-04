@@ -89,6 +89,8 @@ func parseRelation(parser: XMLParser):
 	if not is_railway:
 		return
 	
+	rail_line.info = MapTimetableBridge.getMapLineInfo(rail_line)
+	
 	map.rail_lines.append(rail_line)
 
 func loadOsmFile(file_path: String):

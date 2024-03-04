@@ -3,6 +3,7 @@ class_name TrainPosition
 var prev: TT.Stop
 var next: TT.Stop
 var progress: float
+var direction: bool
 
 func _to_string():
 	return "TrainPosition(prev=%s, next=%s, progress=%s" % [prev, next, progress]
@@ -16,10 +17,14 @@ static func calculateTrainPosition(
 	time_s: float,
 	shouldIgnoreStop: Callable = func(it): false
 ) -> TrainPosition:
-	if (train.stops.is_empty()):
+	if train.stops.is_empty():
+		return null
+	
+	if train.type != TT.TrainService.Type.LOCAL:
 		return null
 	
 	var position: TrainPosition = TrainPosition.new()
+	position.direction = train.stops[-1].station == train.line.base_station
 	
 	for i in range(0, len(train.stops) - 1):
 		var prev: TT.Stop = train.stops[i]
@@ -63,7 +68,7 @@ static func calculateTrainPosition(
 
 """
 Returns a dictionary of TT.TrainServices to Vector2 positions for the passed time and data
-`timetable_stations` must be a dictionary of TT.Stations and their corresponding Map.MapNodes
+`timetable_stations` must be a dictionary of TT.Stations to dictionaries of { true: <up train>, false: <down train> }
 """
 static func calculateMapTrainPositions(
 	time_s: float, 
@@ -73,7 +78,7 @@ static func calculateMapTrainPositions(
 ) -> Dictionary:
 	var positions: Dictionary = {}
 	
-	for train in timetable.trains:
+	timetable.forEachTrain(func(train):
 		var position: TrainPosition = calculateTrainPosition(
 			train,
 			time_s, 
@@ -83,10 +88,10 @@ static func calculateMapTrainPositions(
 		)
 		
 		if position == null:
-			continue
+			return
 		
-		var prev: Map.MapNode = timetable_stations[position.prev.station]
-		var next: Map.MapNode = timetable_stations[position.next.station]
+		var prev: Map.MapNode = timetable_stations[position.prev.station][position.direction]
+		var next: Map.MapNode = timetable_stations[position.next.station][position.direction]
 		
 		var nodes: Array[Map.MapNode] = map.getNodesBetweenNodes(prev, next)
 		assert(nodes != null)
@@ -118,5 +123,6 @@ static func calculateMapTrainPositions(
 			positions[train] = train_position
 			
 			break
+	)
 	
 	return positions

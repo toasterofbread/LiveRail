@@ -9,7 +9,7 @@ var map: Map = null
 var rail_segment_lines: Array[RailSegmentLine] = []
 
 var timetable: TT.Timetable = null
-var timetable_stations: Dictionary = null # [ TT.Station, MapNode ]
+var timetable_stations: Dictionary = null # [ TT.Station, Dictionary[ bool, MapNode ] ]
 
 var time_thread: Thread = null
 var time_s: float = null
@@ -62,6 +62,30 @@ func setMap(map: Map):
 			sprite.scale = Vector2.ONE * 0.05
 			map_node.add_child(sprite)
 
+func _formatStationName(name: String) -> String:
+	var bracket_index: int = name.find("(")
+	if bracket_index != -1:
+		return name.substr(0, bracket_index)
+	return name
+
+func _timetableStationToMapStation(station: TT.Station) -> Array: # 0: Map.MapNode, 1: RailLine
+	var station_name: String = _formatStationName(station.name)
+	
+	for rail_line in map.rail_lines:
+		if rail_line.info == null:
+			continue
+		
+		if rail_line.info.timetable_line_name != station.line.name:
+			continue
+		
+		for map_station in rail_line.stations:
+			for name in [map_station.name] + map_station.names.values():
+				var formatted_name: String = _formatStationName(name)
+				if station_name in formatted_name or formatted_name in station_name:
+					return [map_station, rail_line]
+	
+	return null
+
 """
 Sets the timetable to be used by the train position update thread
 Must be called after setMap
@@ -76,22 +100,23 @@ func setTimetable(timetable: TT.Timetable):
 	
 	timetable_stations = {}
 	
-	for rail_line in map.rail_lines:
-		for station in rail_line.stations:
-			var timetable_station: TT.Station = null
-			for name in [station.name] + station.names.values():
-				for st in timetable.stations:
-					if st in name or name in st:
-						timetable_station = timetable.stations[st]
-						break
-				if timetable_station != null:
-					break
-			
-			if timetable_station == null:
-				push_error("No timetable station found for ", station)
-				return
+	for company in timetable.companies.values():
+		for tt_line in company.lines.values():
+			for timetable_station in tt_line.stations.values():
 				
-			timetable_stations[timetable_station] = station
+				var result: Array = _timetableStationToMapStation(timetable_station)
+				if result == null:
+					continue
+				
+				var map_station: Map.MapNode = result[0]
+				var map_station_line: RailLine = result[1]
+				
+				var existing: Dictionary = timetable_stations.get(timetable_station)
+				if existing == null:
+					timetable_stations[timetable_station] = {map_station_line.info.direction: map_station}
+				else:
+					existing[map_station_line.info.direction] = map_station
+				
 
 func _ready():
 	$Camera2D.ZoomLevelChanged.connect(onCameraZoomLevelChanged)
@@ -114,7 +139,7 @@ func _draw():
 	for position in train_positions.values():
 		if position == null:
 			break
-		draw_circle(position * MapDisplay.SCALE, 3, Color.WHITE)
+		draw_circle(position * MapDisplay.SCALE, 4, Color.WHITE)
 
 func _onClick():
 	var mouse_position: Vector2 = get_global_mouse_position()

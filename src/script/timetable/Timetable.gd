@@ -1,18 +1,41 @@
 class_name TT
 
 class Timetable:
-	var stations: Dictionary = {}
-	var trains: Array[TrainService] = []
+	var companies: Dictionary = {} # [ String, RailwayCompany ]
+	
+	func forEachTrain(action: Callable):
+		for company in companies.values():
+			for line in company.lines.values():
+				for train in line.trains:
+					action.call(train)
 	
 	func _to_string():
-		return "Timetable(len(stations)=%d, len(trains)=%d)" % [len(stations), len(trains)]
+		return "Timetable(len(companies)=%d)" % len(companies)
+
+class RailwayCompany:
+	var name: String
+	var lines: Dictionary = {} # [ String, RailwayLine ]
+	
+	func _to_string():
+		return "RailwayCompany(name=%s, len(lines)=%d)" % [name, len(lines)]
+
+class RailwayLine:
+	var name: String
+	var stations: Dictionary = {} # [ String, Station ]
+	var trains: Array[TrainService] = []
+	var company: RailwayCompany
+	var base_station: Station
+	
+	func _to_string():
+		return "RailwayLine(name=%s, len(stations)=%d, len(trains)=%s)" % [name, len(stations), len(trains)]
 
 class Station:
 	var name: String
 	var schedule: Dictionary # [TrainService, Stop]
+	var line: RailwayLine
 
 	func _to_string():
-		return "Station(name=%s)" % name
+		return "Station(name=%s, line=%s)" % [name, line]
 
 class Stop:
 	var station: Station
@@ -26,6 +49,7 @@ class TrainService:
 	var type: Type
 	var train_class: TrainClass
 	var stops: Array[Stop]
+	var line: RailwayLine
 	
 	func getPosition(time_s: float, shouldIgnoreStop: Callable = func(it): false) -> TrainPosition:
 		return TrainPosition.calculateTrainPosition(self, time_s, shouldIgnoreStop)
@@ -50,12 +74,31 @@ class TrainClass:
 	var acceleration: float
 	var deceleration: float
 
-static func loadTimetableFile(file: FileAccess, timetable: Timetable):
-	var data: Array = JSON.parse_string(file.get_as_text(true))
+static func loadTimetableFile(
+	file: FileAccess,
+	timetable: Timetable
+):
+	var data: Dictionary = JSON.parse_string(file.get_as_text(true))
 	
-	for item in data:
+	var company_name: String = data["company_name"]
+	var company: RailwayCompany = timetable.companies.get(company_name)
+	if company == null:
+		company = RailwayCompany.new()
+		company.name = company_name
+		timetable.companies[company_name] = company
+	
+	var line_name: String = data["line_name"]
+	var line: RailwayLine = company.lines.get(line_name)
+	if line == null:
+		line = RailwayLine.new()
+		line.name = line_name
+		line.company = company
+		company.lines[line_name] = line
+	
+	for item in data["trains"]:
 		var train: TrainService = TrainService.new()
-		timetable.trains.append(train)
+		train.line = line
+		line.trains.append(train)
 		
 		match item["train"]["type"]:
 			"普通":
@@ -79,23 +122,26 @@ static func loadTimetableFile(file: FileAccess, timetable: Timetable):
 				return null
 		
 		for stop in item["stops"]:
-			var station: Station = timetable.stations.get(stop["station"])
+			var station: Station = line.stations.get(stop["station"])
 			if station != null:
 				continue
 			
 			station = Station.new()
 			station.name = stop["station"]
-			timetable.stations[station.name] = station
+			station.line = line
+			line.stations[station.name] = station
 		
 		var stops: Array[Stop]
 		for stop_data in item["stops"]:
 			var stop: Stop = Stop.new()
 			stop.arrival = textToSeconds(stop_data["arr"])
 			stop.departure = textToSeconds(stop_data["dep"])
-			stop.station = timetable.stations[stop_data["station"]]
+			stop.station = line.stations[stop_data["station"]]
 			
 			stops.append(stop)
 		train.stops = stops
+	
+	line.base_station = line.stations[data["base_station"]]
 
 """
 Takes a time string in the format "HH:mm" and returns the represented time in seconds
