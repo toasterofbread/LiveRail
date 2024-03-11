@@ -25,15 +25,19 @@ class RailwayLine:
 	var trains: Array[TrainService] = []
 	var company: RailwayCompany
 	var base_station: Station
+	var map_line: RailLine = null
 	
 	func _to_string():
-		return "RailwayLine(name=%s, len(stations)=%d, len(trains)=%s)" % [name, len(stations), len(trains)]
+		return "RailwayLine(name=%s, len(stations)=%d, len(trains)=%s, base_station=%s)" % [name, len(stations), len(trains), str(base_station.name)]
 
 class Station:
 	var name: String
 	var schedule: Dictionary # [TrainService, Stop]
 	var line: RailwayLine
-
+	
+	func getUid() -> String:
+		return line.name + name
+	
 	func _to_string():
 		return "Station(name=%s, line=%s)" % [name, line]
 
@@ -43,7 +47,7 @@ class Stop:
 	var departure: float
 	
 	func _to_string():
-		return "Stop(arrival=%s, departure=%s)" % [TT.secondsToText(arrival), TT.secondsToText(departure)]
+		return "Stop(arrival=%s, departure=%s, station=%s)" % [TT.secondsToText(arrival), TT.secondsToText(departure), station.name]
 
 class TrainService:
 	var type: Type

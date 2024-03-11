@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://bwjhy1qhk6ira"]
+
+[ext_resource type="Script" path="res://src/scene/train/TrainPreview.gd" id="1_1ivb2"]
+
+[node name="TrainPreview" type="Node2D"]
+script = ExtResource("1_1ivb2")
+
+[node name="Label" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0

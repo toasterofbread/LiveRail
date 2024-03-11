@@ -11,3 +11,5 @@ position = Vector2(70867.7, 49654.6)
 script = ExtResource("2_70vlx")
 
 [node name="Map" type="Node2D" parent="."]
+
+[node name="Trains" type="Node2D" parent="."]

@@ -7,24 +7,34 @@ var rail_lines: Array[RailLine] = []
 func getNodesBetweenNodes(a: MapNode, b: MapNode) -> Array[MapNode]:
 	var between: Array[Map.MapNode] = []
 	var reverse: bool = null
+	var finished: bool = false
 	
 	for line in rail_lines:
 		for segment in line.segments:
 			for node in segment.nodes:
-				if node == a or node == b:
+				if node.matches(a) or node.matches(b):
 					between.append(node)
 					if reverse != null:
+						finished = true
 						break
 					
 					# If we reach node b first, between must be reversed
-					reverse = node == b
+					reverse = node.matches(b)
 				elif reverse != null:
 					between.append(node)
+			
+			if finished:
+				break
 		
-		if reverse != null:
+		if finished:
 			break
+		
+		# Line doesn't have all stations, clear state and try next
+		if reverse != null:
+			reverse = null
+			between.clear()
 	
-	if reverse == null:
+	if not finished:
 		return null
 	
 	if reverse:
@@ -37,14 +47,25 @@ class MapNode extends RefCounted:
 	var pos: Vector2
 	var name: String = null
 	var names: Dictionary = {}
-
+	
 	func _init(id: int, lat: float, lon: float):
 		self.id = id
 		self.pos = Vector2(
 			lat - 340000000,
 			lon - 1350000000
 		)
-
+	
+	func matches(other: MapNode) -> bool:
+		if self == other:
+			return true
+		if pos != null and pos == other.pos:
+			return true
+		
+		if name == null || other.name == null:
+			return false
+		
+		return name == other.name
+	
 	func _to_string():
 		return "MapNode(id=%d, name=%s)" % [id, name]
 	

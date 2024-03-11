@@ -9,7 +9,7 @@ class LineInfo:
 		self.direction = direction
 
 	func _to_string():
-		return "LineInfo(timetable_line_name=%s, direction%s)" % [timetable_line_name, str(direction)]
+		return "LineInfo(timetable_line_name=%s, direction=%s)" % [timetable_line_name, str(direction)]
 
 static var JA_LINE_NAMES: Dictionary = {
 	"阪急電鉄神戸本線 (神戸三宮=>大阪梅田)": LineInfo.new("阪急神戸線", true),
@@ -26,4 +26,5 @@ static func getMapLineInfo(line: RailLine) -> LineInfo:
 	var ja_name: String = line.names.get("ja")
 	if ja_name == null:
 		return null
+	
 	return JA_LINE_NAMES.get(ja_name)
